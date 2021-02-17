@@ -1,5 +1,3 @@
-// Command emulate is a chromedp example demonstrating how to emulate a
-// specific device such as an iPhone.
 package main
 
 import (

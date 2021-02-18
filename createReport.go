@@ -1,4 +1,4 @@
-package main
+package capturescreen
 
 import (
 	"context"
@@ -8,24 +8,21 @@ import (
 	"github.com/chromedp/chromedp"
 )
 
-func main() {
-	// create context
+//Caturescreen for taking Screenshot
+func Caturescreen() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
-
-	// run
-	var b2 []byte
+	var report []byte
 	if err := chromedp.Run(ctx,
 		chromedp.EmulateViewport(1920, 2000),
-
-		chromedp.Navigate(`https://www.joesnewbalanceoutlet.com/dailydeal`),
-		chromedp.WaitVisible(`#Modals`),
-		chromedp.Click(`//*[@id="Modals"]/div/a`, chromedp.NodeVisible),
-		chromedp.CaptureScreenshot(&b2),
+		chromedp.Navigate(`https://www.joesnewbalanceoutlet.com/`),
+		chromedp.Click(`//a[@href='javascript:;']`),
+		chromedp.WaitNotPresent(`#Modals`, chromedp.BySearch),
+		chromedp.CaptureScreenshot(&report),
 	); err != nil {
 		log.Fatal(err)
 	}
-	if err := ioutil.WriteFile("screenshot2.png", b2, 0o644); err != nil {
+	if err := ioutil.WriteFile("../img/dailyreport.png", report, 0o644); err != nil {
 		log.Fatal(err)
 	}
 	log.Printf("OK")

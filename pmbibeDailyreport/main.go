@@ -12,17 +12,20 @@ import (
 )
 
 func main() {
+	go task()
 	router := gin.Default()
 	router.Static("/img", "./img")
 	router.LoadHTMLGlob("./index.html")
 	router.GET("/", getting)
 	router.GET("/lastest", lastest)
 	router.Run(":80")
+
+}
+func task() {
 	s := gocron.NewScheduler()
-	s.Every(3).Minutes().Do(Caturescreen)
+	s.Every(15).Seconds().Do(Caturescreen)
 	<-s.Start()
 }
-
 func lastest(c *gin.Context) {
 	Caturescreen()
 	c.Redirect(http.StatusMovedPermanently, "/")

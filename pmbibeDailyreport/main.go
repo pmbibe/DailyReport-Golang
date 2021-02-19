@@ -12,30 +12,28 @@ import (
 )
 
 func main() {
+	webDisplay()
+}
+
+func webDisplay() {
 	go task()
 	router := gin.Default()
 	router.Static("/img", "./img")
 	router.LoadHTMLGlob("./index.html")
 	router.GET("/", getting)
-	router.GET("/lastest", lastest)
 	router.Run(":80")
 
 }
 func task() {
 	s := gocron.NewScheduler()
-	s.Every(15).Seconds().Do(Caturescreen)
+	s.Every(15).Seconds().Do(catureScreen)
 	<-s.Start()
-}
-func lastest(c *gin.Context) {
-	Caturescreen()
-	c.Redirect(http.StatusMovedPermanently, "/")
-
 }
 func getting(c *gin.Context) {
 	c.HTML(http.StatusOK, "index.html", nil)
 
 }
-func Caturescreen() {
+func catureScreen() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 
 	defer cancel()
@@ -43,9 +41,9 @@ func Caturescreen() {
 	if err := chromedp.Run(ctx,
 		chromedp.EmulateViewport(1920, 2000),
 		chromedp.Navigate(`https://time.is/vi/`),
-		// chromedp.Navigate(`https://www.joesnewbalanceoutlet.com/`),
-		// chromedp.Click(`//a[@href='javascript:;']`),
-		// chromedp.WaitNotPresent(`#Modals`, chromedp.BySearch),
+// 		chromedp.Navigate(`https://www.joesnewbalanceoutlet.com/dailydeal`),
+// 		chromedp.Click(`//a[@href='javascript:;']`),
+// 		chromedp.WaitNotPresent(`#Modals`, chromedp.BySearch),
 		chromedp.CaptureScreenshot(&report),
 	); err != nil {
 		log.Fatal(err)
@@ -53,5 +51,5 @@ func Caturescreen() {
 	if err := ioutil.WriteFile("./img/dailyreport.png", report, 0o644); err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("OK")
+	log.Printf("Updated")
 }

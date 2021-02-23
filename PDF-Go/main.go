@@ -34,7 +34,7 @@ func captureScreen(url string, fileName string) {
 	); err != nil {
 		log.Fatal(err)
 	}
-	fullPath := "./img/" + fileName + ".png"
+	fullPath := "./" + fileName + ".png"
 	if err := ioutil.WriteFile(fullPath, report, 0o644); err != nil {
 		log.Fatal(err)
 	}

@@ -2,24 +2,29 @@ package main
 
 import (
 	"context"
-	"strconv"
-
-	// "fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/user"
 	"regexp"
+	"strconv"
 
 	"github.com/chromedp/chromedp"
 )
 
 func main() {
+	user, err := user.Current()
+	if err != nil {
+		log.Fatal(err)
+	}
 	var totalPage int
 	url := "https://www.joesnewbalanceoutlet.com/men/shoes/under-45"
 	totalPage, _ = strconv.Atoi(findTotalPage(url))
 	for i := 1; i <= totalPage; i++ {
-		captureScreen(newURL(url, i), "Page"+strconv.Itoa(i))
-		log.Print(newURL(url, i))
+		fullPath := user.HomeDir + `\Pictures\` + "Page" + strconv.Itoa(i) + ".png"
+		if err := ioutil.WriteFile(fullPath, captureScreen(newURL(url, i)), 0o644); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 }
@@ -64,23 +69,38 @@ func findTotalPage(url string) string {
 
 }
 
-func captureScreen(url string, fileName string) {
+func captureScreen(url string) []byte {
+	pageWidth, pageHeight := func() (float64, float64) {
+		var pageWidth, pageHeight float64
+		log.Print(url)
+		ctx, cancel := chromedp.NewContext(context.Background())
+		defer cancel()
+		if err := chromedp.Run(ctx,
+			chromedp.Navigate(url),
+			chromedp.Click(`//a[@href='javascript:;']`),
+			chromedp.WaitNotPresent(`#Modals`, chromedp.BySearch),
+			chromedp.Evaluate(`document.body.offsetWidth`, &pageWidth),
+			chromedp.Evaluate(`document.body.offsetHeight`, &pageHeight),
+		); err != nil {
+			log.Fatal(err)
+		}
+		return pageWidth, pageHeight
+	}()
+	log.Print(pageWidth)
+	log.Print(pageHeight)
 	ctx, cancel := chromedp.NewContext(context.Background())
-
 	defer cancel()
 	var report []byte
+	const par float64 = 0.7092619096299325
+
 	if err := chromedp.Run(ctx,
-		chromedp.EmulateViewport(1134, 3469),
+		chromedp.EmulateViewport(int64(pageWidth/par), int64(pageHeight*par)),
 		chromedp.Navigate(url),
-		chromedp.Click(`//a[@href='javascript:;']`),
-		chromedp.WaitNotPresent(`#Modals`, chromedp.BySearch),
-		chromedp.CaptureScreenshot(&report), //Chụp màn hình #Paging > div.pagingWrapper > span.pagingPages
+		chromedp.Click(`//a[@href='javascript:;']`),           //Đóng bảng
+		chromedp.WaitNotPresent(`#Modals`, chromedp.BySearch), //Đợi đến lúc mất bảng hiện lên
+		chromedp.CaptureScreenshot(&report),                   //Chụp màn hình
 	); err != nil {
 		log.Fatal(err)
 	}
-	fullPath := "./img/" + fileName + ".png"
-	if err := ioutil.WriteFile(fullPath, report, 0o644); err != nil {
-		log.Fatal(err)
-	}
-
+	return report
 }
